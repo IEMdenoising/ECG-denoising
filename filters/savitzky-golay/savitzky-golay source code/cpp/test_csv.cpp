@@ -1,11 +1,11 @@
 #include "test_csv.h"
 #include "savitzky_golay.h"
-#include "simple_file_handler.h"
+#include "simple_csv_handler.h"
 
 void test_csv()
 {
 	SavitzkyGolayFilter SGFilter;
-	SimpleFileHandler FileHandler;
+	SimpleCsvHandler CsvHandler;
 
 	std::vector<float> inputSignal;
 	std::vector<float> filteredSignal;
@@ -33,7 +33,7 @@ void test_csv()
 
 	std::cout << "Loading file... " << std::endl << std::endl;
 
-	FileHandler.readFileToVector(path, fileName + ".csv", inputSignal);
+	CsvHandler.readFileToVector(path, fileName + ".csv", inputSignal);
 
 	std::cout << "Starting filtration... " << std::endl << std::endl;
 
@@ -60,9 +60,9 @@ void test_csv()
 	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(endTime - beginTime).count();
 	std::cout << "Filtering took: " << (double)duration / 1000 << " miliseconds" << std::endl;
 
-	FileHandler.writeVectorToFile(path, fileName + "_filtered.csv", filteredSignal);
+	CsvHandler.writeVectorToFile(path, fileName + "_filtered.csv", filteredSignal);
 	if (baselineSignal.size() != 0)
-		FileHandler.writeVectorToFile(path, fileName + "_baseline.csv", baselineSignal);
+		CsvHandler.writeVectorToFile(path, fileName + "_baseline.csv", baselineSignal);
 
 	std::cout << "Everything has been saved, press enter key to exit." << std::endl;
 	std::cin.get();

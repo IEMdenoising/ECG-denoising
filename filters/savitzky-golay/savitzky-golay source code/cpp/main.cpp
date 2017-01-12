@@ -3,6 +3,7 @@
 #include <chrono>
 
 #include "savitzky_golay.h"
+#include "simple_dat_handler.h"
 #include "filter_type.h"
 #include "test_batch.h"
 #include "test_csv.h"
