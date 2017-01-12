@@ -1,0 +1,245 @@
+\documentclass{article}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{polski}
+\usepackage[cp1250]{inputenc}
+\usepackage{parskip}
+\usepackage{enumitem}
+\usepackage{float}
+\usepackage{verbatim}
+\setlist{nosep,after=\vspace{\baselineskip}}
+\graphicspath{ {C:/Users/Wojciech/Documents/DADM/Projekt/wykresy/} }
+\geometry{a4paper, textwidth=170mm, left=20mm, top=20mm,footskip=5mm}
+\usepackage{amsmath}
+\usepackage{mathtools}
+
+
+\begin{document}
+
+\title{ 
+	\textbf{Dedykowane algorytmy diagnostyki medycznej}
+	\protect\\ ECG denoising - Empirical mode decomposition
+	\protect\\ Raport czπstkowy
+}
+\author{Wojciech Kot, Mateusz Kozyra}
+\date{22.12.2016}
+\maketitle
+
+
+\section{WstÍp}
+
+Celem projektu jest opracowanie, implementacja i przeprowadzenie testÛw algorytmu filtracji sygna≥u EKG z wykorzystaniem metody empirycznej dekompozycji (\textit {ang. Empirical mode decomposition}) w úrodowisku C++. Prace nad algorytmem zosta≥y podzielone na g≥Ûwne sk≥adowe, z ktÛrych ten raport obejmuje: 
+\begin{itemize}
+	\item projekt toru przetwarzania sygna≥u
+	\item wstÍpna implementacja algorytmu z wykorzystaniem úrodowiska Matlab i jego testowanie
+\end{itemize}
+
+
+\section{Opis metody - algorytmu}
+
+Dekompozycja empiryczna naleøy do czasowo-czÍstotliwoúciowej transformaty sygna≥u, z ktÛrej bazπ jest sam analizowany sygna≥. OgÛlna zasada dzia≥ania algorytmu polega na za≥oøeniu, øe kaødy sygna≥ zawiera w sobie rÛøne proste oscylacje - funkcje sk≥adowe IMF (\textit {ang. intrinsic mode function}). Funkcje te spe≥niajπ nastÍpujπce warunki: 
+
+\begin{enumerate}
+	\item Maksymalna rÛønica pomiÍdzy iloúciπ ekstremÛw a przejúÊ przez zero jest rÛwna 1.
+	\item W dowolnym punkcie úrednia wartoúÊ obwiedni utworzonej przez maksima i minima musi byÊ rÛwna 0.
+\end{enumerate}
+
+W celu uzyskania sk≥adowych IMF z oryginalnego sygna≥u naleøy przeprowadziÊ na nim nastÍpujπce dzia≥ania: 
+
+\begin{enumerate}
+	\item Identyfikacja wszystkich maksimÛw i minimÛw. 
+	\item Przeprowadzenie interpolacji  w celu uzyskania gÛrnej (dla maksimÛw) i dolnej (dla minimÛw) obwiedni. rÛwna 0.
+	\item Obliczenie úredniej pomiÍdzy dwoma obwiedniami i odjÍcie jej od sygna≥u w celu wyodrÍbnienia detali
+
+\begin{equation} 
+  x_{avg}(t) = \frac{x_{min}(t) +x_{max}(t)}{2}
+ \end{equation}
+\begin{equation}
+  d_{k-1}(t) = x(t) - x_{avg}(t)
+ \end{equation}
+Gdzie:
+\begin{itemize}
+	\item[] 
+	\begin{itemize}
+	 	\item[] $d_{k-1}(t)$ - sygna≥ wejsciowy dla kolejnej iteracji
+		\item[] $x_{min}(t)$ - minimum
+		\item[] $x_{max}(t)$ - maksimum
+	\end{itemize}
+\end{itemize}
+\newpage
+	\item Jeúli wyznaczona sk≥adowa spe≥nia warunki 1-2 to dokonuje siÍ jej ekstrakcji z oryginalnego sygna≥u uzyskujπc sygna≥ resztkowy. W przypadku gdy wyznaczona sk≥adowa nie spe≥nia kryteriÛw koniecznym jest powtÛrzenie poprzednich krokÛw do momentu aø zacznie je spe≥niaÊ.
+
+\begin{equation} 
+  r_{1}(t) = x(t) +d_{k}(t)
+ \end{equation}
+\begin{equation}
+  h_{1}(t) = d_{k}(t)
+ \end{equation}
+
+Gdzie:
+\begin{itemize}
+	\item[] 
+	\begin{itemize}
+	 	\item[] $r_{1}(t)$ - sygna≥ ktÛry bierze udzia≥ w wyznaczaniu kolejnego IMF
+		\item[] $x(t)$ - sygna≥ oryginalny
+		\item[] $d_{k}(t)$ - pierwszy z IMF
+		\item[] $h_{1}(t)$ - sygna≥ resztkowy pierwszej iteracji
+	\end{itemize}
+\end{itemize}
+
+	\item Traktujπc uzyskany sygna≥ resztkowy jako sygna≥ analizowany powtarza siÍ poprzednie kroki w celu wyznaczenia kolejnej funkcji sk≥adowej IMF
+\end{enumerate}
+
+Proces dekompozycji zostaje zakoÒczony w momencie gdy nie jest moøliwym wyodrÍbnienie kolejnych IMF z analizowanego sygna≥u, gdy komponenty IMF niosπ w sobie wystarczajπcπ informacje o amplitudzie i modulacji sygna≥u. W takiej sytuacji analizowany sygna≥ jest funkcjπ monotonicznπ bπdü sta≥π. Dodatkowym kryterium zakoÒczenia dekompozycji jest odchylenie standardowe pomiÍdzy kolejnymi sygna≥ami resztkowymi uzyskiwanymi podczas procesu dekompozycji. Typowo parametr SD przyjmuje zakres wartoúci $0.2 - 0.3$.
+
+\begin{equation}
+	SD=\sum_{t=0}^{L-1} \bigg[\frac{|d_{k-1}(t)-d_{k}(t)|^{2}}{d_{k-1}^{2}(t)}\bigg]
+ \end{equation}
+
+Proponowana metoda wykorzystania EMD w filtracji sygna≥u EKG ma polegaÊ na przeprowadzeniu filtracji IMF w momencie gdy funkcja sk≥adowa jest zdominowana przez szum. W celu okreúlenia zawartoúci szumu w poszczegÛlnych IMF pos≥uøono siÍ wspÛ≥czynnikiem p≥askoúci widma. 
+
+\begin{equation}
+	plaskoscWidma  = \frac { \sqrt[L]{ \prod_{n=0}^{L-1} H(n) } } { \frac{\sum_{n=0}^{L-1}H(n)}  {L} } 
+ \end{equation}
+
+
+Zakres czÍstotliwoúci sygna≥u EKG zazwyczaj zawiera siÍ w przedziale od $0.05$ do $100Hz$, z tego powodu moc widma funkcji sk≥adowych bÍdzie skoncentrowana na ma≥ym zakresie czÍstotliwoúci, wniosek - spektrum zaszumionych funkcji IMF bÍdzie wzglÍdnie bardziej p≥askie w porÛwnaniu do sygna≥u IMF.
+\vspace{5mm} %5mm vertical space
+Zaszumione sk≥adowe poddano filtracji przy pomocy filtru dolnoprzepustowego i filtru gÛrnoprzepustowego.
+Po przeprowadzonej filtracji sygna≥ jest rekonstruowany: 
+
+\begin{equation}
+	\hat{x}(t) = \sum_{k=1}^{n} \tilde{h}_{k}(t) + \sum_{k=n+1}^{N}h_{k}(t)+r_{N}(t)
+ \end{equation}
+
+Gdzie:
+\begin{itemize}
+	\item[] 
+	\begin{itemize}
+	 	\item[] $\tilde{h}_{k}(t)$ - przefiltrowana wersja $h_{k}(t)$
+		\item[] $r_{N}(t)$ - pozosta≥y sygna≥ IMF
+	\end{itemize}
+\end{itemize}
+
+\subsection{Diagram algorytmu}
+
+tutaj bÍdzie diagram
+
+\section{Dzia≥anie algorytmu}
+
+Algorytm zaimplementowany zosta≥ zgodnie ze schematem podanym we wstÍpie. Jako úrodowisko wybrany zosta≥ program Matlab, ze wzglÍdu na duøπ iloúc juø wbudowabych funkcji, ktÛre mogπ byÊ wykorzystane. W proponowanym algorytmie proces rozpoczyna siÍ od dekompozycji, gdzie wyszukiwane sπ kolejne komponenty IMF. Zgodnie z [2], dla kaødej wyznaczonej funkcji, mogπcej byÊ funkcjπ oscylacyjnπ, sprawdzane sπ warunki. Jeøeli w kolejnych iteracjach, nie dojdzie do znalezienia odpowiedniego komponentu IMF, jest on wyznaczany jako funkcja, dla ktÛrej SD, pomiÍdzy niπ, a tπ z poprzedniej iteracji, jest mniejsze niø 0,3.  PrzyjÍta wartoúÊ progowa, jest wynikiem licznych prÛb algorytmu, dajπc najlepsze rezultaty. èrÛd≥a [1], podajπ jej wartoúÊ jako przedzia≥ 0,2-0,3, co jednak w praktyce da≥o gorsze wyniki.  Sam proces przesiewania moøe siÍ wiÍc zakoÒczyÊ w nastÍpujπcych przypadkach:
+\begin{itemize}
+  \item Znalezienie imf, spe≥niajπcej kryteria
+  \item Znalezienie imf, wyznaczonπ na podstwaie SD
+  \item Brak moøliwoúci wygenerowania obwiedni sygna≥u (na podstwaie minimÛw i maksimÛw), ze wzglÍdu na niewystarczajπcπ iloúÊ punktÛw (minimum 2)
+\end{itemize}
+Ostatni warunek, wynika z faktu, iø w kolejnych iteracja analizowany sygna≥ zmienia siÍ, zgodnie ze wzorami 3 i4. 
+Proces zostaje zakoÒczony, gdy  r  przestaje byÊ funkcjπ monotonicznπ, co powoduje,   øe nie moøna  wyodrÍbniÊ  wiÍcej    sk≥adowych  IMF.  Rysunek 1   przedstawia przyk≥adowy sygna≥ EKG (sygna≥ nr 100 z bazy MIT-BIH Arrythmia Database), ktÛry poddany zosta≥ analizie i zostanie pokazany jako przyk≥ad w tym 
+raporcie.
+
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.5]{rawsignal}
+\caption{Sygna≥ EKG poddawany analizie}
+\end{figure}
+
+Po dokonaniu procesu przesiewania uzyskano kolejne funkcje oscylacyjne IMF (Rysunek 2).  Zak≥Ûcenia sygna≥u w postaci szumÛw zawarte sπ w kilku pierwszych funkcjach [2]. W proponowanym rozwiπzaniu w celu okreúlenia iloúci zaszumionych komponentÛw, zdecydowano siÍ wykorzystaÊ wylicznie p≥askoúci widam (ang. Spectral Flatness- SF) dla kaødej funkcji i uznaniu za zaszumieone, tylko te, dla ktÛrych jej wartoúÊ znajduje siÍ poniøej ustalonego progu. Pierwsze funkcje oscylacyjne, ktÛrych wartoúÊ SF, jest mniejsza od 0,09, zostanπ uznane za zaszumione. PrÛg zosta≥ przyjÍty, na podstawie danych dostÍpnych w ürÛd≥ach [2] i jak wykaza≥a dalsza analiza sprawdza siÍ rÛwnieø w zaproponowanym algorytmie. Algorytm wykaza≥, øe za zaszumionπ, moøna uznaÊ tylko pierwszπ funkcjÍ oscylacyjnπ.
+
+
+
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.35]{IMFS}
+\caption{Kolejne funkcje oscylacyjne sygna≥u EKG}
+\end{figure}
+\pagebreak
+Rezultatem procesu przesiewania, oprÛcz powyøszych funkcji, by≥ rÛwnieø sygna≥ resztkowy, czyli pozosta≥oúÊ wejúciowego, z ktÛrej nic nie moøna juø by≥o wyodrÍbniÊ (Rysunek 3). 
+
+
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.7]{residue}
+\caption{Sygna≥ resztkowy}
+\end{figure}
+
+\pagebreak
+
+Kolejnym etapem by≥o odszumienie pierwszej funkcji oscylacyjnej. OgÛlnie algorytm sumuje wszystkie zaszumione funkcje i dopiero na wynikowej dokonuje dalszych operacji, jednak, z powodu faktu, iø w tym przypadku jest tylko jedna, nie jest konieczna operacja sumowania. Odszumiony sygana≥ wyjúciowy ma nastÍpnie zastπpiÊ wszystkie zaszumione funkcje oscylacyjne, czyli  w wielu przypadkach, chociaø nie w analizowanym, nastπpi redukcja iloúci tych funkcji. 
+W celu przeprowadzenia operacji odszumiania, zaprojektowano filtr pasmowo-przepustowy o paúmie 5-15 Hz. CzÍstotliwoúÊ prÛbkowania sygna≥u wynosi 360 Hz.  Wykonano go w postaci kaskadowego po≥πczenia filtra dolno i gÛrnoprzepustowego:
+\begin{itemize}
+  \item Filtr dolnoprzepustowy:  fc=15 Hz, rzπd=10, okno: Tukey (Rysunek 4)
+
+		\begin{figure}[!htbp]
+		\centering
+		\includegraphics[scale=0.6]{lowpass}
+		\caption{Filtr dolnoprzepustowy}
+		\end{figure}
+
+  \item Filtr gÛrnoprzepustowy:  fc=5 Hz, rzπd=10, okno: Tukey (Rysunek 5)
+
+		\begin{figure}[h]
+		\centering
+		\includegraphics[scale=0.6]{highpass}
+		\caption{Filtr dolnoprzepustowy}
+		\end{figure}
+
+\end{itemize}
+
+Rezultaty przedstawiono na Rysunkach 6 i 7. Filtr, jak widaÊ nie eliminuje ca≥kowicie zak≥ÛceÒ, jednak znacznie je zmniejsza. Wynik jest zdecydowanie lepszy niø w przypadku filtracji pasmowo przepustowej 40-60 Hz, ktÛra jest wykorzystywana w analogicznych przypadkach [2]. Zaproponowane pasmo, pozwala na dalszπ swobodnπ analizÍ i ostateczne odszumienie sygna≥u, choÊ nie wykluczone, øe filtracja pozostanie aspektem, ktÛry naleøy poddaÊ jeszcze dalszej pracy, celem jego udoskonalenia. 
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.5]{1stIMFnoise}
+\caption{Zaszumiona 1 funkcja oscylacyjna}
+\end{figure}
+
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.5]{1stIMFfiltered}
+\caption{Przefiltrowana 1 funkcja oscylacyjna}
+\end{figure}
+
+Ostatecznie przefiltrowanπ funkcjÍ oscylacyjnπ dodano do pozosta≥ych oraz do sygna≥u restkowego. Utworzony w ten sposÛb sygna≥ stanowi koÒcowπ wersjÍ- przefiltrowany sygna≥ EKG (Rysunek 8). 
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.5]{filtredECG}
+\caption{Przefiltrowany sygna≥ EKG}
+\end{figure}
+
+\paragraph{\textbf{ Podsumowanie \hfill \break}} 
+
+Przedstawione w artykule wyniki eksperymentu potwierdzajπ moøliwoúÊ zastosowania  metody EMD do filtracji sygna≥Ûw EKG oraz poprawnoúÊ wykonania prototypu. PorÛwnujπc sygana≥ wejúciowy i wynikowy, widaÊ wyraünπ poprawÍ jakoúci i uzyskanie znacznej redukcji szumÛw. Z diagnostycznego punku widzenia moøe mieÊ to szerokie szastosowanie w dalszej analizie sygna≥u pod kπtem wystÍpowania w nim nieprawid≥owoúci. UwagÍ zwraca niøsza wartoúÊ amplitudy za≥amkÛw R w sygnale przefiltrowanym. Moøe mieÊ to wp≥yw na dalszπ diagnostykÍ, stπd w dalszych etapach zostanπ podjÍte starania majπce na celu minimalizacjÍ tego efektu. 
+
+
+
+
+
+\newpage
+\begin{thebibliography}{9}
+\bibitem{1} 
+	Md. Ashfanoor Kabir, Celia Shahnaz
+	\textit{Denoising of ECG signals based on noise reduction algorithms in EMD and wavelet domains}. 
+\bibitem{2} 
+	Anil Chacko, Samit Ari 
+	\textit{Denoising of ECG signals using Empirical Mode Decomposition based technique}
+\bibitem{3} 
+	Omkar Singh, Ramesh Kumar Sunkaria
+	\textit{ECG Signal Denoising Based on Empirical Mode Decomposition and Moving Average Filter}
+\bibitem{4} 
+	Sreedevi Gandham1, B. Anuradha
+	\textit{An Iterative Method of Ensemble Empirical Mode Decomposition for Enhanced ECG Signal Denoising}
+\bibitem{5} 
+	Ashish Rohila1, Raj Kumar Patel and Vinod Kumar Giri
+	\textit{Signal Denoising by Empirical Mode Decomposition}
+\end{thebibliography}
+
+
+
+
+
+
+
+\end{document}
