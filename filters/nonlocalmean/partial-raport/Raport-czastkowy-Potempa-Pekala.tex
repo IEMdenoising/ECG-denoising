@@ -1,0 +1,121 @@
+\title{Brief Article} \documentclass[11pt, oneside]{article}   
+\usepackage{geometry}               		
+\geometry{letterpaper}                   		
+%\usepackage[parfill]{parskip}    		% Activate to begin paragraphs with an empty line rather than an indent
+%\usepackage{graphicx}				% Use pdf, png, jpg, or epsÂ§ with pdflatex; use eps in DVI mode
+
+\usepackage[T1]{fontenc}
+\usepackage[cp1250]{inputenc}
+%\usepackage{polski}
+
+\usepackage[english,polish]{babel} % U\.zyj polskiego \l{}amania wyrazów (zamiast domy\'clnego angielskiego).
+\usepackage{polski} %\usepackage[utf8]{inputenc}
+\usepackage{indentfirst}
+
+\usepackage{mathtools}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+
+\algnewcommand\algorithmicOutput{\textbf{Wyj\'scie:}}
+\algnewcommand\Output{\item[\algorithmicOutput]}
+
+\algnewcommand\algorithmicInput{\textbf{Wej\'scie:}}
+\algnewcommand\Input{\item[\algorithmicInput]}
+
+\algnewcommand\algorithmicVar{\textbf{Zmienne pomocnicze:}}
+\algnewcommand\Temporary{\item[\algorithmicVar]}
+
+
+
+\title{Algorytm Nonlocal Means}
+\author{M. P\k{e}kala, A.Potempa}
+%\date{}							% Activate to display a given date or no date
+
+\begin{document}
+\maketitle
+\section{Wst\k{e}p}
+
+Algorytm Nonlocal Means najcz\k{e}\'sciej stosowany jest w przetwarzaniu obrazów. W odró\.znieniu od filtrów wykorzystuj\k{a}cych algorytm local means, gdzie przetworzona warto\'s\'c piksela liczona jest jako \'srednia pikseli j\k{a} otaczaj\k{a}cych to w algorytmie nonloclal means warto\'s\'c piksela wyznaczana jest jako \'srednia ze wszystkich punktów obrazu z uwzgl\k{e}dnieniem wagi podobie\'nstwa pikseli w zale\.zno\'sci od przetwarzanego punktu. 
+
+Ten algorytm mo\.ze by\'c te\.z stosowany do przetwarzania sygna\l{}ów 1D, co pozwala na zastosowanie go do filtracji sygna\l{}u EKG.
+\section{Opis matematyczny}
+\subsection{Algorytm Nonlocal Means}
+Dla sygna\l{}u $v$, który jest oryginalnym, zaszumionym sygna\l{}em, warto\'s\'c przetworzonego sygna\l{}u $u$ wyra\.za si\k{e} wzorem:
+
+\begin{equation}
+\begin{split}\'n
+\frac{1}{Z(s)}\displaystyle\sum_{t\in{N(s)}}w(s,t)v(t),
+\end{split}
+\end{equation}
+gdzie $w(s,T)$ s\k{a} wagami, które mierz\k{a} podobie\'nstwo pomi\k{e}dzy dwoma kwadratowymi wycentrowanymi obszarami wokó\l{} $s$ oraz $t$. Wagi mo\.zna zdefiniowa\'c przy pomocy równania nr 2.  $Z(s)$ jest znormalizowan\k{a} sta\l{}\k{a}, gdzie dla ka\.zdego $s$ zachodzi zale\.zno\'s\'c $Z(s) = \sum_{t\in{N(s)}}w(s,t)$. $N(s)$ odpowiada otoczeniu punktu $s$, nazywanym cz\k{e}sto obszarem okna poszukiwa\'n. 
+
+\begin{equation}
+\begin{split}
+w(s,t) = g_{h}(\displaystyle\sum_{\delta\in{\Delta}}G_{\sigma}(\delta)(v(s+\delta) - v(t+\delta))^2),
+\end{split}
+\end{equation}
+$G_{\sigma}$ jest Gaussowskim j\k{a}drem przekszta\l{}cenia wariancji $\sigma^2$, $g_{h}$ jest ci\k{a}g\l{}\k{a} nierosn\k{a}c\k{a} funkcj\k{a} dla której $g_{h}(0) = 1$ a $lim_{x\to+\infty}g_{h}(x) = 0$, a $\Delta$ reprezentuje obszar zawieraj\k{a}cy otoczenie punktu $\delta$.
+
+Podsumowuj\k{a}c algorytm Nonlocal Means odtwarza sygna\l{} poprzez przeprowadzenie wa\.zonej \'sredniej warto\'sci punktów uwzgl\k{e}dniaj\k{a}c przestrzenne podobie\'nstwo pomi\k{e}dzy punktami. Podobie\'nstwo jest liczone pomi\k{e}dzy równymi obszarami, w których uchwycona jest lokalna struktura (geometria, tekstura). Nale\.zy zwróci\'c uwag\k{e}, \.ze punkty poza obszarem $N(s)$ nie maj\k{a} wp\l{}ywu na warto\'s\'c $u(s)$.
+Zak\l{}adamy, \.ze okna poszukiwa\'n $N$ i obszary $\Delta$ maj\k{a} tak\k{a} sam\k{a} liczebno\'s\'c $(2K+1)^d$ i $(2P+1)^d$ dla $N = [-K,K]^d$ i $\Delta = [-P,P]^d$. 
+
+W przedstawionym do tej pory opisie znalaz\l{}y si\k{e} parametry, za pomoc\k{a} których wykonano odszumianie przebiegu EKG. Jednym z nich jest bazowy parametr opisany jako po\l{}owa d\l{}ugo\'sci $P$, czyli po\l{}owa szeroko\'sci za\l{}amka $P$ o najwi\k{e}kszej amplitudzie.
+
+Sygna\l{}owi poddawanemu analizie odpowiada parametr $N(s)$.
+
+\subsection{Algorytm Fast Nonlocal Means}
+
+ Algorytm NLM jest dosy\'c skomplikowany, w zwi\k{a}zku z czym podj\k{e}to wiele stara\'n, aby przyspieszy\'c jego dzia\l{}anie. Najcz\k{e}\'sciej stosowanym podej\'sciem jest Fast Noclocal Means Algorytm, zaproponowany przez Darbona. To podej\'scie znacz\k{a}co przyspiesza dzia\l{}anie algorytmu poprzez zmian\k{e} kolejno\'sci operacji tak aby wyeliminowa\'c zagnie\.zd\.zone p\k{e}tle. Dzi\k{e}ki temu sygna\l{} 1D o d\l{}ugo\'sci $N$ b\k{e}dzie mie\'c z\l{}o\.zono\'s\'c obliczeniow\k{a} równ\k{a} $O(2NM)$, podczas gdy przy tradycjonalnym podej\'sciu wynosi $O(L_{\Delta}NM)$.
+
+Podstawowym elementem algorytmu FNL jest efektywne policzenie wag $w(s,t)$. Wyznaczenie wag jest najbardziej czasoch\l{}onnym krokiem przy generowaniu przetworzonego sygna\l{}u $u$. Przy podej\'sciu 1D zak\l{}adamy, \.ze $\Omega = [0,n-1]$ dla sygna\l{}u $n$ elementowego. 
+Maj\k{a}c wektor translacji $d_{x}$ wprowadzamy nowy sygna\l{} $S_{d_{x}}$ jako:
+\begin{equation}
+\begin{split}
+S_{d_{x}}(p) = \displaystyle\sum_{k=0}^{p}(v(k)-v(k+d_{x}))^2 , p\in{\Omega}
+\end{split}
+\end{equation}
+
+$S_{d_{x}} $ odpowiada dyskretnemu ca\l{}kowaniu kwadratu ró\.znic pomi\k{e}dzy sygna\l{}em $v$ a jego przesuni\k{e}ciem o wektor $d_{x}$. W sygna\l{}ach 1D mamy obszary $\Delta = [-P,P]$. J\k{a}dro przekszta\l{}cenia Gaussowskiego zamienia si\k{e} na sta\l{}\k{a}, co nie ma zauwa\.zalnego wp\l{}ywu na sygna\l{}, dzi\k{e}ki czemu równanie 2 mo\.zna zapisa\'c w postaci: $w(s,t) = g_{h}(\sum_{\delta\in{\Delta}}(v(s+\delta_{x}) - v(t+\delta_{x}))^2)$. Zak\l{}adaj\k{a}c, \.ze $d_{x} = (t-s)$, a $p=s+\delta_{x}$ to równanie $w(s,t)$ mo\.zna przeparametryzowa\'c do postaci $w(s,t) = g_{h}(\sum_{p=s-P}^{s+P}(v(p) - v(p+d_{x}))^2)$. Je\.zeli rozdzielimy sum\k{e} i u\.zyjemy równania nr 3 to uzyskamy: 
+
+\begin{equation}
+\begin{split}\l{}
+w(s,t) = g_{h}(S_{d_{x}}(s+P)-S_{d_{x}}(s-P))
+\end{split}
+\end{equation}
+Równanie nr 4 jest niezale\.zne od t z za\l{}o\.zeniem, \.ze wielko\'s\'c $S_{d_{x}}$ jest znana. Jest to kluczowe równanie, które pozwala na wyznaczenie wag dla pary punktów w sta\l{}ym czasie. 
+
+Podsumowuj\k{a}c, dzia\l{}anie algorytmu mo\.zna opisa\'c jako  wyznaczenie warto\'sci $S_{d_{x}}$ z wykorzystaniem równania 3, nast\k{e}pnie wyznaczane s\k{a} wagi korzystaj\k{a}c z równania 2 i 4, a na koniec przeprowadzana jest filtracja na podstawie równania 1. Procedura jest powtarzana dla wszystkich mo\.zliwych translacji wyznaczonych przez wymiar okna poszukiwa\'n $N$.
+ 
+\section{Implementacja algorytmu}
+
+\begin{algorithm}
+\caption{Algorytm Fast-NLM }
+\begin{algorithmic}[1]
+\Input $v,K,P,h$
+\Output $u$
+\Temporary $S_{d_{x}}, Z, M$
+\State Inicjalizacja $u$, $M$, $Z$ jako $0$.
+\ForAll{$d_{x}\in[-K,K]$}
+\State {Obliczenie $S_{d_{x}}$ na podstawie równania 3}
+\ForAll {$s\in[0,n-1] $}
+\State {Obliczenie wag w na podstawie równania 2 i 4}
+\State {$u(s)\leftarrow u(s) + w\cdot u(s+d_{x})$}
+\State{$M(s) = max(M(s),w)$}
+\State {$Z(s)\leftarrow Z(s) + w$}
+\EndFor
+\EndFor
+\ForAll {$s\in[0,n-1] $}
+\State {$u(s)\leftarrow u(s) + M(s) \cdot v(s)$}
+\State {Zastosowanie normalizacji sygna\l{}u wyj\'sciowego}
+\State {$u(s)\leftarrow \frac{u(s)}{Z(s) + M(s)} $}
+\EndFor
+\State \textbf{return} $u$
+\end{algorithmic}
+\end{algorithm}
+
+Do implementacji algorytmu zosta\l{}y u\.zyte 4 paramaetry wej\'sciowe, oznaczone kolejno jako $v$, $K$, $P$ oraz $h$. Symbolem $v$ oznaczono sygna\l{} wej\'sciowy, podawany na wej\'scie implementowanej funkcji. U\.zyty  parametr $h$, decydowa\l{} o stopniu wyg\l{}adzenia sygna\l{}u po filtracji. Zbyt ma\l{}a warto\'s\'c tego parametru oznacza zbyt du\.zy wp\l{}yw szumu, co skutkuje niedostateczn\l{}ym u\'srednianiem sygna\l{}u. Efektem przyj\k{e}cia za parametr $h$ zbyt du\.zej warto\'sci jest zmiana wygl\k{a}du przebiegów sygna\l{}u EKG, która spowoduje \.ze wiele sygna\l{}ów b\k{e}dzie do siebie podobnych mimo wyst\k{e}puj\k{a}cych ró\.znic. Pierwszy z dwóch kolejnych parametrów- $K$, zosta\l{} wykorzystany do stworzenia wektora b\k{e}d\k{a}cego zbiorem wed\l{}ug którego iterowane by\l{}y kolejne przej\'scia algorytmu. Parametr $P$ odpowiada\l{} natomiast za s\k{a}siedztwo w którym wyszukiwane b\k{e}d\k{a} kolejne próbki. Odpowiedni dobór zakresu s\k{a}siedztwa wp\l{}ywa m.in. na szybko\'s\'c przeszukiwania sygna\l{}u co ma bezpo\'sredni wp\l{}yw na wydajno\'s\'c algorytmu. Zbyt du\.zy zakres s\k{a}siedztwa sprawi, \.ze czas kompilacji zostanie wydlu\.zony, nawet w przypadku szybkiego algorytmu. Dobór odpowiednio du\.zego $P$ umo\.zliwi porównanie ze sob\k{a} zespo\l{}ów QRS wyst\k{e}puj\k{a}cych w zakresie parametru $P$.
+
+\end{document}  
