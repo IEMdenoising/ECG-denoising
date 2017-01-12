@@ -1,12 +1,12 @@
-#ifndef SIMPLE_DAT_HANDLER
-#define SIMPLE_DAT_HANDLER
+#ifndef SIMPLE_FILE_HANDLER
+#define SIMPLE_FILE_HANDLER
 
 #include <fstream>
 #include <vector>
 #include <string>
 #include <iostream>
 
-class SimpleDatHandler {
+class SimpleFileHandler {
 public:
 	void readFileToVector(std::string path, std::string fileName, std::vector<float> &outSignal);
 	void writeVectorToFile(std::string path, std::string fileName, std::vector<float> signal);

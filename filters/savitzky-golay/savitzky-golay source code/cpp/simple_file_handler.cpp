@@ -1,6 +1,6 @@
-#include "simple_csv_handler.h"
+#include "simple_file_handler.h"
 
-void SimpleCsvHandler::readFileToVector(std::string path, std::string fileName, std::vector<float> &outSignal)
+void SimpleFileHandler::readFileToVector(std::string path, std::string fileName, std::vector<float> &outSignal)
 {
 	std::ifstream inf(path.append(fileName));
 
@@ -25,7 +25,7 @@ void SimpleCsvHandler::readFileToVector(std::string path, std::string fileName, 
 	}
 }
 
-void SimpleCsvHandler::writeVectorToFile(std::string path, std::string fileName, std::vector<float> signal)
+void SimpleFileHandler::writeVectorToFile(std::string path, std::string fileName, std::vector<float> signal)
 {
 	std::ofstream file;
 	file.open(path.append(fileName));

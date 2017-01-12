@@ -1,11 +1,11 @@
 #include "test_batch.h"
 #include "savitzky_golay.h"
-#include "simple_dat_handler.h"
+#include "simple_file_handler.h"
 
 void test_batch(std::vector<std::string> fileNames, std::string inputPath, std::string outputPath)
 {
 	SavitzkyGolayFilter SGFilter;
-	SimpleDatHandler CsvHandler;
+	SimpleFileHandler FileHandler;
 
 	unsigned lowPassWindowSize = 11;
 	unsigned highPassWindowSize = 85;
@@ -34,7 +34,7 @@ void test_batch(std::vector<std::string> fileNames, std::string inputPath, std::
 
 		std::cout << "Loading file " << *it << "... " << std::endl << std::endl;
 
-		CsvHandler.readFileToVector(inputPath, *it + ".dat", inputSignal);
+		FileHandler.readFileToVector(inputPath, *it + ".dat", inputSignal);
 
 		std::cout << "Starting filtration... " << std::endl << std::endl;
 
@@ -63,10 +63,10 @@ void test_batch(std::vector<std::string> fileNames, std::string inputPath, std::
 
 		std::cout << "Saving..." << std::endl;
 
-		CsvHandler.writeVectorToFile(outputPath, *it + "_filtered.dat", filteredSignal);
+		FileHandler.writeVectorToFile(outputPath, *it + "_filtered.dat", filteredSignal);
 	}
 
-	CsvHandler.writeVectorToFile(outputPath, "execution_times.dat", executionTimes);
+	FileHandler.writeVectorToFile(outputPath, "execution_times.dat", executionTimes);
 
 	std::cout << "All done!" << std::endl;
 	std::cout << "Everything has been saved, press enter key to exit." << std::endl;
