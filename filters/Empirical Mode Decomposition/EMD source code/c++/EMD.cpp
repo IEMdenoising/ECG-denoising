@@ -1,7 +1,7 @@
 // EMD.cpp : Defines the entry point for the console application.
 //
 
-#include "stdafx.h"
+
 #include<chrono>
 #include <iostream>
 #include <ctime>
@@ -552,13 +552,14 @@ VectorXd Denoising(VectorXd signal) {
 
 int main()
 {
-
-	ifstream is("C:/Users/Wojciech/Documents/DADM/Projekt/AIR2016/dane/raw/ecg9.txt");
+	//Enter path of raw signal
+	ifstream is(/*Path*/);
 	istream_iterator<double> start(is), end;
 	vector<double> signalvec(start, end);
 	cout << "Read " << signalvec.size() << " numbers" << std::endl;
 	VectorXd signal(signalvec.size());
 	VectorXd filteredsignal(signalvec.size());
+	
 	for (int i = 0; i<signalvec.size() - 2; i++) {
 
 		signal[i] = signalvec[i];
@@ -573,8 +574,8 @@ int main()
 
 	}
 
-
-	ofstream outputFile("C:/Users/Wojciech/Documents/DADM/Projekt/AIR2016/dane/raw/filt9.txt");
+	//Enter path of output signal 
+	ofstream outputFile(/*Enter path*/);
 
 	copy(signalvec.begin(), signalvec.end(), ostream_iterator<double>(outputFile, ", "));
 
