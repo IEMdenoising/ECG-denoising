@@ -1,0 +1,125 @@
+#include <iostream>
+#include <cmath>
+#include <fstream>
+#include <iterator>
+#include <vector>
+#include <string>
+#include <sstream>
+#include "EIGEN\Eigen\Dense"
+#include "wavelet2d.h"
+
+
+using namespace std;
+
+
+double median(vector<double> vec){
+
+    int numel = vec.size();
+    double median;
+    if (numel%2==1){
+            numel=1+numel/2;
+       median=vec[numel];
+    } else{
+    median=(vec[1+numel/2]+vec[((numel/2)-1)/2]);
+    }
+	return median;
+}
+
+vector<double> WaveletWienerFilter(vector<double> ecg)
+{
+
+ vector<double> sigma;
+ vector<double> threshold;
+ vector<double> coefficients;
+ vector<double> absoluteCoefficients;
+ vector<double> coeffThresholded;
+ vector<double> finalCoefficients;
+ vector<double> cleanSignalEstimate;
+
+ for (int i=0;i<ecg.size()-1;i++){
+    ecg[i]=ecg[i]-median(ecg);
+ }
+
+	//PIERWSZA GAŁĄŹ ALGORYTMU
+
+ // transformacja falkowa
+ int length;
+ swt(ecg,4,"bior2.2",coefficients,length);
+
+ // wyliczenie wartosci bezwglednej wspolczynnikow
+   for(int i=0; i< coefficients.size()-1; i++){
+    absoluteCoefficients[i]=abs(coefficients[i]);
+
+   }
+ // wyliczenie odch standardowego
+for(int i=0; i<5;i++){
+    for(int j=i*length;j<((i+1)*length-1);j++){
+        vector<double> temp;
+        temp.push_back(absoluteCoefficients.at(j));
+        sigma.push_back(median(temp)/0.6745);
+    }
+}
+
+//threshold=3*sigma;
+
+// thresholding nonnegative Garrote
+
+for (int i=0;i<5;i++){
+   for(int j=i*length;j<((i+1)*length-1);j++){
+
+    if (absoluteCoefficients.at(j)<sigma.at(i))
+        coeffThresholded.at(j)=0;
+    else coeffThresholded.at(j)=(coefficients[j]-pow(sigma.at(i),2)/coefficients[j]);
+   }
+
+}
+   iswt(coeffThresholded,4,"bior2.2",cleanSignalEstimate);
+
+   // DRUGA GAŁĄŹ ALGORYTMU
+
+// przeniesienie estymaty niezaszumionego sygnału do dziedziny falkowej
+
+vector<double> estimateCoefficients;
+vector<double> correctionFactor;
+vector<double> correctedSwtSignal;
+vector<double> result;
+int length2;
+
+    swt(cleanSignalEstimate,4,"bior2.2",estimateCoefficients,length2);
+
+//wyliczenie wspolczynnika korekcji na podstawie wspolczynnikow estymaty niezaszumionego sygnalu
+
+    for (int i=0;i<5;i++){
+        for(int j=i*length;j<((i+1)*length-1);j++){
+
+                correctionFactor[j]=pow(estimateCoefficients[j],2)/(pow(estimateCoefficients[j],2)+sigma[i]);
+                correctedSwtSignal[j]=coefficients[j]*correctionFactor[j];
+        }
+    }
+//powrot do dziedziny czasu
+    iswt(correctedSwtSignal,4,"bior2.2",result);
+	return result;
+}
+
+int main()
+{
+
+	//sciezka surowego sygnalu np: "E:/Wiener/modified.dat"
+
+	ifstream signal("E:/Wiener/modified.dat");
+	istream_iterator<double> start(signal), end;
+	vector<double> ecg(start, end);
+	vector<double> filteredECG;
+
+	//sprawdzenie poprawnosci wczytania sygnalu
+	cout << "Read " << ecg.size() << "positions" << std::endl;
+
+    filteredECG=WaveletWienerFilter(ecg);
+
+    //sciezka gdzie ma byc zapisany sygnal wyjsciowy np:  "E:/Wiener/out.dat"
+    ofstream output("E:/Wiener/out.dat");
+
+    copy(filteredECG.begin(), filteredECG.end(), ostream_iterator<double>(output, ", "));
+
+	return 0;
+}
